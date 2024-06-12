@@ -1,0 +1,112 @@
+// Tabla de Usuarios
+CREATE TABLE usuarios (
+usuario_id UUID PRIMARY KEY,
+nombre TEXT,
+email TEXT
+);
+
+// Tabla de Videos
+CREATE TABLE videos (
+video_id UUID PRIMARY KEY,
+titulo TEXT,
+descripcion TEXT
+);
+
+// Tabla de Comentarios por Usuario
+CREATE TABLE comentarios_por_usuario (
+usuario_id UUID,
+timestamp TIMESTAMP,
+video_id UUID,
+comentario TEXT,
+PRIMARY KEY (usuario_id, timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC);
+
+// Tabla de Comentarios por Video
+CREATE TABLE comentarios_por_video (
+video_id UUID,
+timestamp TIMESTAMP,
+usuario_id UUID,
+comentario TEXT,
+PRIMARY KEY (video_id, timestamp)
+) WITH CLUSTERING ORDER BY (timestamp DESC);
+
+
+// Creación del Keyspace
+CREATE KEYSPACE gestion_videos WITH replication = {
+'class': 'SimpleStrategy',
+'replication_factor' : 3
+};
+
+// Población de Datos
+INSERT INTO gestion_videos.usuarios (usuario_id, nombre, email) VALUES (uuid(), 'Usuario 1', 'usuario1@example.com');
+INSERT INTO gestion_videos.usuarios (usuario_id, nombre, email) VALUES (uuid(), 'Usuario 2', 'usuario2@example.com');
+INSERT INTO gestion_videos.usuarios (usuario_id, nombre, email) VALUES (uuid(), 'Usuario 3', 'usuario3@example.com');
+
+INSERT INTO gestion_videos.videos (video_id, titulo, descripcion) VALUES (uuid(), 'Video 1', 'Descripcion del video 1');
+INSERT INTO gestion_videos.videos (video_id, titulo, descripcion) VALUES (uuid(), 'Video 2', 'Descripcion del video 2');
+INSERT INTO gestion_videos.videos (video_id, titulo, descripcion) VALUES (uuid(), 'Video 3', 'Descripcion del video 3');
+
+//Comentarios de Usuario 1
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (9fbfd90e-08dd-45e0-9a6f-68c551ab30fe, toTimestamp(now()), 68db6d73-7f88-4c3f-beca-22fbb74675a9, 'Increíble video!');
+
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (9fbfd90e-08dd-45e0-9a6f-68c551ab30fe, toTimestamp(now()), 192c67b4-4168-4d81-a428-028c269224f8, 'Muy bien explicado.');
+
+//Comentarios de Usuario 2
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (fe27be8d-adba-4409-86ba-c0e3ba131531, toTimestamp(now()), 192c67b4-4168-4d81-a428-028c269224f8, 'Excelente producción.');
+
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (fe27be8d-adba-4409-86ba-c0e3ba131531, toTimestamp(now()), 38ed4cb0-67fa-4f43-ba41-4d5ec7ccd3d4, 'Me encantó este video.');
+
+//Comentarios de Usuario 3
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (094aad54-6a7e-46aa-a024-92be477092f0, toTimestamp(now()), 38ed4cb0-67fa-4f43-ba41-4d5ec7ccd3d4, 'Muy informativo y detallado.');
+
+INSERT INTO gestion_videos.comentarios_por_usuario 
+(usuario_id, timestamp, video_id, comentario) 
+VALUES (094aad54-6a7e-46aa-a024-92be477092f0, toTimestamp(now()), 68db6d73-7f88-4c3f-beca-22fbb74675a9, 'Gran calidad de contenido.');
+
+
+// Comentarios en Videos
+
+// Comentarios para Video 1 por Usuario 1 y Usuario 3
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (68db6d73-7f88-4c3f-beca-22fbb74675a9, toTimestamp(now()), 9fbfd90e-08dd-45e0-9a6f-68c551ab30fe, 'Increíble video!');
+
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (68db6d73-7f88-4c3f-beca-22fbb74675a9, toTimestamp(now()), 094aad54-6a7e-46aa-a024-92be477092f0, 'Gran calidad de contenido.');
+
+// Comentarios para Video 2 por Usuario 1 y Usuario 2
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (192c67b4-4168-4d81-a428-028c269224f8, toTimestamp(now()), 9fbfd90e-08dd-45e0-9a6f-68c551ab30fe, 'Muy bien explicado.');
+
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (192c67b4-4168-4d81-a428-028c269224f8, toTimestamp(now()), fe27be8d-adba-4409-86ba-c0e3ba131531, 'Excelente producción.');
+
+// Comentarios para Video 3 por Usuario 2 y Usuario 3
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (38ed4cb0-67fa-4f43-ba41-4d5ec7ccd3d4, toTimestamp(now()), fe27be8d-adba-4409-86ba-c0e3ba131531, 'Me encantó este video.');
+
+INSERT INTO gestion_videos.comentarios_por_video 
+(video_id, timestamp, usuario_id, comentario) 
+VALUES (38ed4cb0-67fa-4f43-ba41-4d5ec7ccd3d4, toTimestamp(now()), 094aad54-6a7e-46aa-a024-92be477092f0, 'Muy informativo y detallado.');
+
+// Consulta 1: Comentarios de un Usuario
+SELECT * FROM gestion_videos.comentarios_por_usuario
+WHERE usuario_id = 9fbfd90e-08dd-45e0-9a6f-68c551ab30fe;
+
+// Consulta 2: Comentarios de un Video
+SELECT * FROM gestion_videos.comentarios_por_video
+WHERE video_id = 68db6d73-7f88-4c3f-beca-22fbb74675a9;

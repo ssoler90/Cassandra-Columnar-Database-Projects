@@ -1,0 +1,90 @@
+//Creación del Keyspace
+CREATE KEYSPACE agenciaviajes WITH replication = {
+'class': 'SimpleStrategy',
+'replication_factor' : 3
+};
+
+//Tabla viajes_por_cliente
+CREATE TABLE agenciaviajes.viajes_por_cliente (
+idCliente text,
+fechaPartida date,
+idViaje int,
+lugarPartida text,
+lugarDestino text,
+numDias int,
+PRIMARY KEY (idCliente, fechaPartida)
+) WITH CLUSTERING ORDER BY (fechaPartida DESC);
+
+//Tabla clientes_por_viaje
+CREATE TABLE agenciaviajes.clientes_por_viaje (
+idViaje int,
+idCliente text,
+hitos map<text, text>,
+PRIMARY KEY (idViaje, idCliente)
+) WITH CLUSTERING ORDER BY (idCliente ASC);
+
+//Inserciones en la Tabla viajes_por_cliente
+-- Insertar datos para Bertoldo, viaje de Madrid a París
+INSERT INTO agenciaviajes.viajes_por_cliente (idCliente, fechaPartida, idViaje, lugarPartida,
+lugarDestino, numDias)
+VALUES ('Bertoldo', '2020-05-02', 3, 'Madrid', 'París', 2);
+-- Insertar datos para Herminia, viaje de Barcelona a París
+INSERT INTO agenciaviajes.viajes_por_cliente (idCliente, fechaPartida, idViaje, lugarPartida,
+lugarDestino, numDias)
+VALUES ('Herminia', '2020-05-02', 3, 'Barcelona', 'París', 2);
+-- Insertar datos para Bertoldo, viaje de Madrid a Tokyo
+INSERT INTO agenciaviajes.viajes_por_cliente (idCliente, fechaPartida, idViaje, lugarPartida,
+lugarDestino, numDias)
+VALUES ('Bertoldo', '2020-06-01', 4, 'Madrid', 'Tokyo', 7);
+
+//Inserciones en la Tabla clientes_por_viaje
+-- Insertar hitos para Bertoldo en el viaje a París
+INSERT INTO agenciaviajes.clientes_por_viaje (idViaje, idCliente, hitos)
+VALUES (3, 'Bertoldo', {'Versailles': '3-05 contacta agencia'});
+-- Insertar hitos para Herminia en el viaje a París
+INSERT INTO agenciaviajes.clientes_por_viaje (idViaje, idCliente, hitos)
+VALUES (3, 'Herminia', {'Versailles': '3-05 contacta agencia'});
+-- Insertar hitos para Bertoldo en el viaje a Tokyo
+INSERT INTO agenciaviajes.clientes_por_viaje (idViaje, idCliente, hitos)
+VALUES (4, 'Bertoldo', {'Transbordo': 'Frankfurt, puerta C27'});
+
+//Consulta 1: Viajes de Bertoldo
+SELECT lugarPartida, lugarDestino, fechaPartida, numDias
+FROM agenciaviajes.viajes_por_cliente
+WHERE idCliente = 'Bertoldo'
+ORDER BY fechaPartida DESC;ç
+
+//Consulta 2: Hitos del viaje con identicador 3
+SELECT idCliente, hitos
+FROM agenciaviajes.clientes_por_viaje
+WHERE idViaje = 3
+ORDER BY idCliente ASC;
+
+// Código para la Actualización
+UPDATE agenciaviajes.clientes_por_viaje
+SET hitos['regreso'] = '2020-05-04'
+WHERE idViaje = 3 AND idCliente = 'Bertoldo';
+
+
+// Solución sin Modicar el Modelo de Datos Existente
+SELECT * FROM agenciaviajes.viajes_por_cliente
+WHERE fechaPartida = '2020-05-02' ALLOW FILTERING;
+
+// Solución con Modicación del Modelo de Datos
+CREATE TABLE agenciaviajes.viajes_por_fecha (
+fechaPartida date,
+idCliente text,
+idViaje int,
+lugarPartida text,
+lugarDestino text,
+numDias int,
+PRIMARY KEY (fechaPartida, idCliente)
+);
+
+
+//Código para la Consulta
+SELECT idCliente, idViaje, lugarPartida, lugarDestino, numDias
+FROM agenciaviajes.viajes_por_fecha
+WHERE fechaPartida = '2020-05-02';
+
+
